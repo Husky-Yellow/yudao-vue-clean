@@ -4,7 +4,6 @@
 
 <script setup lang="ts">
 import { useClipboard } from '@vueuse/core'
-import MarkdownIt from 'markdown-it'
 import 'highlight.js/styles/vs2015.min.css'
 import hljs from 'highlight.js'
 
@@ -20,21 +19,51 @@ const message = useMessage() // 消息弹窗
 const { copy } = useClipboard() // 初始化 copy 到粘贴板
 const contentRef = ref()
 
-const md = new MarkdownIt({
-  highlight: function (str, lang) {
-    if (lang && hljs.getLanguage(lang)) {
-      try {
-        const copyHtml = `<div id="copy" data-copy='${str}' style="position: absolute; right: 10px; top: 5px; color: #fff;cursor: pointer;">复制</div>`
-        return `<pre style="position: relative;">${copyHtml}<code class="hljs">${hljs.highlight(lang, str, true).value}</code></pre>`
-      } catch (__) {}
-    }
-    return ``
-  }
-})
+// 简单的 markdown 渲染器（替代 MarkdownIt）
+const renderMarkdown = (content: string) => {
+  if (!content) return ''
+  
+  let html = content
+    // 代码块
+    .replace(/```(\w+)?\n([\s\S]*?)```/g, (_match, lang, code) => {
+      const copyHtml = `<div id="copy" data-copy='${code.trim()}' style="position: absolute; right: 10px; top: 5px; color: #fff;cursor: pointer;">复制</div>`
+      let highlightedCode = code.trim()
+      
+      if (lang && hljs.getLanguage(lang)) {
+        try {
+          highlightedCode = hljs.highlight(code.trim(), { language: lang }).value
+        } catch (e) {
+          // 高亮失败时使用原始代码
+        }
+      }
+      
+      return `<pre style="position: relative;">${copyHtml}<code class="hljs">${highlightedCode}</code></pre>`
+    })
+    // 标题
+    .replace(/^### (.*$)/gm, '<h3>$1</h3>')
+    .replace(/^## (.*$)/gm, '<h2>$1</h2>')
+    .replace(/^# (.*$)/gm, '<h1>$1</h1>')
+    // 粗体
+    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+    // 斜体
+    .replace(/\*(.*?)\*/g, '<em>$1</em>')
+    // 行内代码
+    .replace(/`([^`]+)`/g, '<code>$1</code>')
+    // 链接
+    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank">$1</a>')
+    // 列表
+    .replace(/^\* (.*$)/gm, '<li>$1</li>')
+    .replace(/(<li>.*<\/li>)/gs, '<ul>$1</ul>')
+    // 换行
+    .replace(/\n\n/g, '</p><p>')
+    .replace(/\n/g, '<br>')
+  
+  return `<p>${html}</p>`.replace(/<p><\/p>/g, '')
+}
 
 /** 渲染 markdown */
 const renderedMarkdown = computed(() => {
-  return md.render(props.content)
+  return renderMarkdown(props.content)
 })
 
 /** 初始化 **/

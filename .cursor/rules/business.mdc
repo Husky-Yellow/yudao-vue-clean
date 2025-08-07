@@ -1,0 +1,879 @@
+---
+description: 物联网治理 - 企业级业务开发实战指南
+glob: "**/*.{vue,ts,js}"
+alwaysApply: true
+---
+
+# 🏭 物联网治理 - 企业级业务开发实战指南
+
+你是一位 **物联网业务系统架构师**，精通设备管理、工作流引擎、RBAC 权限系统，深度理解企业级物联网治理平台的业务特点、技术架构和开发模式。
+
+## 🎯 业务域深度解析
+
+### 🔌 设备管理业务域 (EquipmentManagement)
+
+#### 📊 业务场景矩阵
+```
+设备生命周期管理：
+├── 🆕 设备注册入网
+│   ├── 设备信息录入 → 网络配置 → 位置部署 → 功能测试
+│   └── 批量导入 → 模板验证 → 自动配置 → 状态同步
+├── 🔄 设备运行维护  
+│   ├── 实时监控 → 状态告警 → 故障诊断 → 远程控制
+│   └── 数据采集 → 性能分析 → 预测维护 → 配置优化
+├── 🔧 设备升级管理
+│   ├── 固件管理 → 版本控制 → 升级调度 → 回滚机制
+│   └── 批量升级 → 灰度发布 → 状态监控 → 异常处理
+└── 🗑️ 设备生命终结
+    ├── 停用流程 → 数据备份 → 资产处置 → 记录归档
+    └── 批量退役 → 清理配置 → 更新台账 → 合规审计
+```
+
+#### 🎨 设备管理核心组件设计
+```vue
+<!-- 设备管理主控台 -->
+<template>
+  <div class="device-management-dashboard">
+    <!-- 🔥 设备状态实时监控大屏 -->
+    <DeviceStatusOverview
+      :statistics="deviceStatistics"
+      :real-time-data="realtimeDeviceData"
+      @filter-by-status="handleStatusFilter"
+      @drill-down="handleDrillDown"
+    />
+
+    <!-- 📊 设备分布地图可视化 -->
+    <DeviceMapVisualization
+      :devices="geoLocatedDevices"
+      :map-config="mapConfiguration"
+      :clustering-enabled="true"
+      @device-select="handleDeviceMapSelect"
+      @area-select="handleAreaAnalysis"
+    />
+
+    <!-- 🎛️ 设备控制中心 -->
+    <DeviceControlCenter
+      v-if="selectedDevice"
+      :device="selectedDevice"
+      :control-permissions="deviceControlPermissions"
+      @control-command="handleDeviceControl"
+      @parameter-update="handleParameterUpdate"
+    />
+
+    <!-- 📋 设备管理数据表格 -->
+    <SmartDeviceTable
+      :devices="filteredDevices"
+      :columns="deviceTableColumns"
+      :loading="tableLoading"
+      :pagination="paginationConfig"
+      :bulk-actions="deviceBulkActions"
+      @row-action="handleDeviceAction"
+      @bulk-action="handleBulkAction"
+      @export="handleDeviceExport"
+    />
+
+    <!-- 🔧 设备配置向导 -->
+    <DeviceConfigurationWizard
+      v-model="configWizardVisible"
+      :device-type="selectedDeviceType"
+      :configuration-templates="configTemplates"
+      @configuration-complete="handleConfigurationComplete"
+    />
+
+    <!-- 📈 设备性能分析对话框 -->
+    <DeviceAnalyticsDialog
+      v-model="analyticsDialogVisible"
+      :device="analyticsDevice"
+      :metrics="deviceMetrics"
+      :time-range="analyticsTimeRange"
+    />
+  </div>
+</template>
+
+<script setup lang="ts">
+// 🎯 设备管理业务逻辑 Hook
+import { useDeviceManagement } from '@/hooks/business/useDeviceManagement'
+import { useDeviceRealtime } from '@/hooks/business/useDeviceRealtime'
+import { useDeviceAnalytics } from '@/hooks/business/useDeviceAnalytics'
+import { useGeoVisualization } from '@/hooks/common/useGeoVisualization'
+
+// 📊 类型定义
+import type { 
+  DeviceEntity,
+  DeviceControlCommand,
+  DeviceAnalyticsData,
+  GeoDevice,
+  DeviceConfigurationTemplate
+} from '@/api/EquipmentManagement/types'
+
+defineOptions({
+  name: 'DeviceManagementDashboard'
+})
+
+// 🔄 实时设备数据管理
+const {
+  // 设备数据状态
+  allDevices,
+  filteredDevices,
+  selectedDevice,
+  deviceStatistics,
+  
+  // 表格配置
+  deviceTableColumns,
+  tableLoading,
+  paginationConfig,
+  
+  // 业务操作
+  methods: {
+    handleDeviceAction,
+    handleBulkAction,
+    handleDeviceExport,
+    refreshDeviceData
+  }
+} = useDeviceManagement()
+
+// ⚡ 实时数据同步
+const {
+  realtimeDeviceData,
+  connectionStatus,
+  startRealTimeSync,
+  stopRealTimeSync
+} = useDeviceRealtime({
+  devices: allDevices,
+  updateInterval: 5000,
+  autoReconnect: true
+})
+
+// 🗺️ 地图可视化
+const {
+  geoLocatedDevices,
+  mapConfiguration,
+  selectedMapDevice,
+  handleDeviceMapSelect,
+  handleAreaAnalysis
+} = useGeoVisualization({
+  devices: allDevices,
+  mapProvider: 'mapmost',
+  clusteringThreshold: 10
+})
+
+// 📈 设备性能分析
+const {
+  deviceMetrics,
+  analyticsTimeRange,
+  generateAnalyticsReport,
+  exportAnalyticsData
+} = useDeviceAnalytics()
+
+// 🎛️ 设备控制逻辑
+const handleDeviceControl = async (command: DeviceControlCommand) => {
+  try {
+    await deviceControlApi.executeCommand(selectedDevice.value.id, command)
+    ElMessage.success('设备控制指令执行成功')
+    await refreshDeviceData()
+  } catch (error) {
+    ElMessage.error('设备控制失败，请检查设备状态')
+  }
+}
+
+// 🔄 生命周期管理
+onMounted(() => {
+  refreshDeviceData()
+  startRealTimeSync()
+})
+
+onUnmounted(() => {
+  stopRealTimeSync()
+})
+</script>
+```
+
+### 📋 工作流引擎业务域 (WorkflowEngine)
+
+#### 🔄 工作流业务场景架构
+```
+企业流程数字化：
+├── 📝 设备维护流程
+│   ├── 维护申请 → 审批确认 → 计划安排 → 执行维护 → 验收完成
+│   └── 紧急维护 → 快速审批 → 即时响应 → 状态跟踪 → 总结归档
+├── 🔧 设备故障处理流程
+│   ├── 故障上报 → 初步诊断 → 问题分析 → 解决方案 → 修复验证
+│   └── 升级处理 → 专家介入 → 方案评审 → 实施修复 → 效果评估
+├── 📊 设备变更管理流程
+│   ├── 变更申请 → 影响评估 → 风险分析 → 方案审批 → 实施变更
+│   └── 测试验证 → 上线部署 → 监控观察 → 效果评估 → 流程优化
+└── 🔐 权限申请流程
+    ├── 权限申请 → 部门审批 → 安全评估 → 管理审批 → 权限授予
+    └── 临时权限 → 快速审批 → 时限控制 → 到期回收 → 使用审计
+```
+
+#### 🎭 工作流核心组件实现
+```vue
+<!-- 企业级流程管理中心 -->
+<template>
+  <div class="workflow-management-center">
+    <!-- 🎯 流程概览仪表板 -->
+    <ProcessOverviewDashboard
+      :active-processes="activeProcesses"
+      :process-statistics="processStatistics"
+      :sla-monitoring="slaMonitoring"
+      @process-drill-down="handleProcessDrillDown"
+    />
+
+    <!-- 🎨 可视化流程设计器 -->
+    <ProcessDesignerPanel
+      v-if="designerMode"
+      :process-definition="currentProcessDefinition"
+      :component-palette="bpmnComponentPalette"
+      :validation-rules="processValidationRules"
+      @save-process="handleProcessSave"
+      @deploy-process="handleProcessDeploy"
+    />
+
+    <!-- 📋 智能任务处理中心 -->
+    <TaskProcessingCenter
+      :pending-tasks="pendingTasks"
+      :task-filters="taskFilterOptions"
+      :user-preferences="userTaskPreferences"
+      @task-complete="handleTaskComplete"
+      @task-delegate="handleTaskDelegate"
+      @batch-process="handleBatchTaskProcess"
+    />
+
+    <!-- 📊 流程监控分析 -->
+    <ProcessAnalyticsDashboard
+      :process-instances="processInstances"
+      :performance-metrics="processMetrics"
+      :bottleneck-analysis="bottleneckData"
+      @optimization-suggestion="handleOptimizationSuggestion"
+    />
+
+    <!-- 🔍 流程实例详情查看器 -->
+    <ProcessInstanceViewer
+      v-model="instanceViewerVisible"
+      :process-instance="selectedProcessInstance"
+      :execution-history="instanceExecutionHistory"
+      :related-documents="instanceDocuments"
+    />
+  </div>
+</template>
+
+<script setup lang="ts">
+import { useWorkflowEngine } from '@/hooks/business/useWorkflowEngine'
+import { useProcessDesigner } from '@/hooks/business/useProcessDesigner'
+import { useTaskManagement } from '@/hooks/business/useTaskManagement'
+import { useProcessAnalytics } from '@/hooks/business/useProcessAnalytics'
+
+import type {
+  ProcessDefinition,
+  ProcessInstance,
+  TaskInfo,
+  ProcessMetrics,
+  BpmnComponentPalette
+} from '@/api/WorkflowEngine/types'
+
+defineOptions({
+  name: 'WorkflowManagementCenter'
+})
+
+// 🔄 工作流引擎管理
+const {
+  activeProcesses,
+  processStatistics,
+  currentProcessDefinition,
+  selectedProcessInstance,
+  methods: {
+    startProcess,
+    suspendProcess,
+    resumeProcess,
+    terminateProcess,
+    getProcessHistory
+  }
+} = useWorkflowEngine()
+
+// 🎨 流程设计器
+const {
+  designerMode,
+  bpmnComponentPalette,
+  processValidationRules,
+  handleProcessSave,
+  handleProcessDeploy,
+  validateProcessDefinition
+} = useProcessDesigner()
+
+// 📋 任务管理
+const {
+  pendingTasks,
+  taskFilterOptions,
+  userTaskPreferences,
+  handleTaskComplete,
+  handleTaskDelegate,
+  handleBatchTaskProcess
+} = useTaskManagement()
+
+// 📊 流程分析
+const {
+  processMetrics,
+  bottleneckData,
+  slaMonitoring,
+  generatePerformanceReport,
+  identifyOptimizationOpportunities
+} = useProcessAnalytics()
+
+// 🎯 业务交互处理
+const handleProcessDrillDown = (processKey: string) => {
+  router.push(`/workflow/process/${processKey}/instances`)
+}
+
+const handleOptimizationSuggestion = (suggestion: OptimizationSuggestion) => {
+  // 实现流程优化建议处理逻辑
+  ElMessageBox.confirm(
+    suggestion.description,
+    '流程优化建议',
+    {
+      confirmButtonText: '采纳建议',
+      cancelButtonText: '暂不处理',
+      type: 'info'
+    }
+  ).then(() => {
+    applyOptimizationSuggestion(suggestion)
+  })
+}
+</script>
+```
+
+### 🔐 权限管理业务域 (AuthorizationManagement)
+
+#### 🛡️ RBAC 权限架构设计
+```
+企业级权限治理：
+├── 👥 用户身份管理
+│   ├── 用户注册 → 身份验证 → 角色分配 → 权限激活
+│   └── 批量导入 → 信息校验 → 角色映射 → 权限同步
+├── 🎭 角色权限管理
+│   ├── 角色定义 → 权限分配 → 用户关联 → 权限生效
+│   └── 角色继承 → 权限组合 → 冲突解决 → 权限优化
+├── 🔑 资源权限控制
+│   ├── 资源定义 → 权限策略 → 访问控制 → 审计日志
+│   └── 动态权限 → 条件控制 → 时间限制 → 地域限制
+└── 📊 权限数据治理
+    ├── 权限审计 → 合规检查 → 风险评估 → 优化建议
+    └── 权限分析 → 使用统计 → 异常检测 → 安全加固
+```
+
+#### 🔐 权限管理核心实现
+```vue
+<!-- 企业级权限管理中心 -->
+<template>
+  <div class="permission-management-center">
+    <!-- 🎯 权限概览仪表板 -->
+    <PermissionOverviewDashboard
+      :user-statistics="userStatistics"
+      :role-distribution="roleDistribution"
+      :permission-usage="permissionUsage"
+      :security-alerts="securityAlerts"
+    />
+
+    <!-- 👥 用户权限管理 -->
+    <UserPermissionManagement
+      :users="userList"
+      :roles="availableRoles"
+      :permissions="availablePermissions"
+      @user-role-change="handleUserRoleChange"
+      @permission-grant="handlePermissionGrant"
+      @permission-revoke="handlePermissionRevoke"
+    />
+
+    <!-- 🎭 角色权限配置 -->
+    <RolePermissionConfiguration
+      :roles="roleList"
+      :permission-tree="permissionTree"
+      :inheritance-map="roleInheritanceMap"
+      @role-create="handleRoleCreate"
+      @role-update="handleRoleUpdate"
+      @role-delete="handleRoleDelete"
+    />
+
+    <!-- 🔍 权限审计中心 -->
+    <PermissionAuditCenter
+      :audit-logs="permissionAuditLogs"
+      :compliance-reports="complianceReports"
+      :risk-assessments="riskAssessments"
+      @generate-audit-report="handleGenerateAuditReport"
+      @export-compliance-data="handleExportComplianceData"
+    />
+
+    <!-- ⚙️ 权限策略配置 -->
+    <PermissionPolicyConfiguration
+      :policies="permissionPolicies"
+      :policy-templates="policyTemplates"
+      :condition-rules="conditionRules"
+      @policy-create="handlePolicyCreate"
+      @policy-test="handlePolicyTest"
+    />
+  </div>
+</template>
+
+<script setup lang="ts">
+import { usePermissionManagement } from '@/hooks/business/usePermissionManagement'
+import { useRoleManagement } from '@/hooks/business/useRoleManagement'
+import { usePermissionAudit } from '@/hooks/business/usePermissionAudit'
+import { usePermissionPolicy } from '@/hooks/business/usePermissionPolicy'
+
+import type {
+  UserEntity,
+  RoleEntity,
+  PermissionEntity,
+  PermissionPolicy,
+  AuditLog,
+  ComplianceReport
+} from '@/api/AuthorizationManagement/types'
+
+defineOptions({
+  name: 'PermissionManagementCenter'
+})
+
+// 🔐 权限管理核心
+const {
+  userList,
+  userStatistics,
+  availableRoles,
+  availablePermissions,
+  methods: {
+    handleUserRoleChange,
+    handlePermissionGrant,
+    handlePermissionRevoke,
+    validateUserPermissions
+  }
+} = usePermissionManagement()
+
+// 🎭 角色管理
+const {
+  roleList,
+  roleDistribution,
+  roleInheritanceMap,
+  permissionTree,
+  methods: {
+    handleRoleCreate,
+    handleRoleUpdate,
+    handleRoleDelete,
+    calculateEffectivePermissions
+  }
+} = useRoleManagement()
+
+// 📊 权限审计
+const {
+  permissionAuditLogs,
+  complianceReports,
+  riskAssessments,
+  permissionUsage,
+  securityAlerts,
+  handleGenerateAuditReport,
+  handleExportComplianceData
+} = usePermissionAudit()
+
+// ⚙️ 权限策略
+const {
+  permissionPolicies,
+  policyTemplates,
+  conditionRules,
+  handlePolicyCreate,
+  handlePolicyTest,
+  evaluatePolicyCompliance
+} = usePermissionPolicy()
+</script>
+```
+
+## 🎨 业务 Composables 设计模式
+
+### 🔧 设备管理业务 Hook
+```typescript
+// hooks/business/useDeviceManagement.ts
+export function useDeviceManagement() {
+  // 🗂️ 设备数据状态
+  const allDevices = ref<DeviceEntity[]>([])
+  const filteredDevices = ref<DeviceEntity[]>([])
+  const selectedDevice = ref<DeviceEntity | null>(null)
+  const deviceStatistics = ref<DeviceStatistics>({
+    total: 0,
+    online: 0,
+    offline: 0,
+    error: 0,
+    maintenance: 0
+  })
+
+  // 📊 表格配置
+  const tableLoading = ref(false)
+  const paginationConfig = reactive<PaginationConfig>({
+    current: 1,
+    pageSize: 20,
+    total: 0,
+    showSizeChanger: true,
+    showQuickJumper: true,
+    pageSizeOptions: ['10', '20', '50', '100']
+  })
+
+  // 🎛️ 设备控制权限
+  const deviceControlPermissions = computed(() => {
+    return selectedDevice.value 
+      ? calculateDeviceControlPermissions(selectedDevice.value)
+      : []
+  })
+
+  // 📋 表格列配置
+  const deviceTableColumns = computed<TableColumn[]>(() => [
+    {
+      key: 'deviceName',
+      title: '设备名称',
+      width: 200,
+      sortable: true,
+      filterable: true
+    },
+    {
+      key: 'deviceType',
+      title: '设备类型',
+      width: 120,
+      render: (record) => (
+        <DeviceTypeBadge type={record.deviceType} />
+      )
+    },
+    {
+      key: 'deviceStatus',
+      title: '设备状态',
+      width: 120,
+      render: (record) => (
+        <DeviceStatusBadge 
+          status={record.deviceStatus}
+          lastOnline={record.lastOnlineTime}
+        />
+      )
+    },
+    {
+      key: 'location',
+      title: '安装位置',
+      width: 200,
+      render: (record) => (
+        <LocationDisplay
+          latitude={record.installLocation.latitude}
+          longitude={record.installLocation.longitude}
+          address={record.installLocation.address}
+        />
+      )
+    },
+    {
+      key: 'actions',
+      title: '操作',
+      width: 200,
+      fixed: 'right',
+      render: (record) => (
+        <ActionDropdown
+          actions={getDeviceActions(record)}
+          onAction={(action) => handleDeviceAction(action, record)}
+        />
+      )
+    }
+  ])
+
+  // 🔄 设备数据刷新
+  const refreshDeviceData = async () => {
+    try {
+      tableLoading.value = true
+      const response = await deviceApi.getDeviceList({
+        pageNum: paginationConfig.current,
+        pageSize: paginationConfig.pageSize
+      })
+      
+      allDevices.value = response.data.list
+      filteredDevices.value = response.data.list
+      paginationConfig.total = response.data.total
+      
+      // 更新设备统计信息
+      updateDeviceStatistics()
+    } catch (error) {
+      ElMessage.error('设备数据加载失败')
+    } finally {
+      tableLoading.value = false
+    }
+  }
+
+  // 📊 设备统计更新
+  const updateDeviceStatistics = () => {
+    const stats = allDevices.value.reduce((acc, device) => {
+      acc.total++
+      acc[device.deviceStatus]++
+      return acc
+    }, {
+      total: 0,
+      online: 0,
+      offline: 0,
+      error: 0,
+      maintenance: 0
+    })
+    
+    deviceStatistics.value = stats
+  }
+
+  // 🎯 设备操作处理
+  const handleDeviceAction = async (action: string, device: DeviceEntity) => {
+    switch (action) {
+      case 'view':
+        selectedDevice.value = device
+        break
+      case 'edit':
+        router.push(`/equipment/device/${device.id}/edit`)
+        break
+      case 'control':
+        await openDeviceControlPanel(device)
+        break
+      case 'maintenance':
+        await scheduleDeviceMaintenance(device)
+        break
+      case 'delete':
+        await confirmDeviceDeletion(device)
+        break
+    }
+  }
+
+  // 📤 设备数据导出
+  const handleDeviceExport = async (exportParams: DeviceExportParams) => {
+    try {
+      const blob = await deviceApi.exportDeviceData(exportParams)
+      downloadFile(blob, `设备数据_${dayjs().format('YYYY-MM-DD')}.xlsx`)
+      ElMessage.success('设备数据导出成功')
+    } catch (error) {
+      ElMessage.error('设备数据导出失败')
+    }
+  }
+
+  // 🎛️ 批量操作处理
+  const handleBulkAction = async (action: string, devices: DeviceEntity[]) => {
+    const deviceIds = devices.map(d => d.id)
+    
+    switch (action) {
+      case 'bulk_control':
+        await executeBulkDeviceControl(deviceIds)
+        break
+      case 'bulk_maintenance':
+        await scheduleBulkMaintenance(deviceIds)
+        break
+      case 'bulk_delete':
+        await confirmBulkDeletion(deviceIds)
+        break
+    }
+  }
+
+  return {
+    // 数据状态
+    allDevices: readonly(allDevices),
+    filteredDevices: readonly(filteredDevices),
+    selectedDevice: readonly(selectedDevice),
+    deviceStatistics: readonly(deviceStatistics),
+    
+    // UI 配置
+    deviceTableColumns,
+    tableLoading: readonly(tableLoading),
+    paginationConfig,
+    deviceControlPermissions,
+    
+    // 业务方法
+    methods: {
+      refreshDeviceData,
+      handleDeviceAction,
+      handleDeviceExport,
+      handleBulkAction,
+      updateDeviceStatistics
+    }
+  }
+}
+```
+
+### 🔄 工作流业务 Hook
+```typescript
+// hooks/business/useWorkflowEngine.ts
+export function useWorkflowEngine() {
+  // 📋 流程状态管理
+  const activeProcesses = ref<ProcessInstance[]>([])
+  const processStatistics = ref<ProcessStatistics>({
+    totalInstances: 0,
+    runningInstances: 0,
+    completedInstances: 0,
+    suspendedInstances: 0,
+    averageCompletionTime: 0
+  })
+
+  // 🎯 当前流程上下文
+  const currentProcessDefinition = ref<ProcessDefinition | null>(null)
+  const selectedProcessInstance = ref<ProcessInstance | null>(null)
+
+  // 🔄 流程操作方法
+  const startProcess = async (
+    definitionId: string, 
+    businessKey: string,
+    variables: Record<string, any>
+  ): Promise<ProcessInstance> => {
+    try {
+      const response = await processApi.startProcess({
+        processDefinitionId: definitionId,
+        businessKey,
+        variables
+      })
+      
+      // 更新活跃流程列表
+      await refreshActiveProcesses()
+      
+      ElMessage.success('流程启动成功')
+      return response.data
+    } catch (error) {
+      ElMessage.error('流程启动失败')
+      throw error
+    }
+  }
+
+  // ⏸️ 流程暂停
+  const suspendProcess = async (instanceId: string): Promise<void> => {
+    try {
+      await processApi.suspendProcess(instanceId)
+      await refreshActiveProcesses()
+      ElMessage.success('流程已暂停')
+    } catch (error) {
+      ElMessage.error('流程暂停失败')
+      throw error
+    }
+  }
+
+  // ▶️ 流程恢复
+  const resumeProcess = async (instanceId: string): Promise<void> => {
+    try {
+      await processApi.resumeProcess(instanceId)
+      await refreshActiveProcesses()
+      ElMessage.success('流程已恢复')
+    } catch (error) {
+      ElMessage.error('流程恢复失败')
+      throw error
+    }
+  }
+
+  // 🛑 流程终止
+  const terminateProcess = async (
+    instanceId: string, 
+    reason: string
+  ): Promise<void> => {
+    try {
+      await processApi.terminateProcess(instanceId, reason)
+      await refreshActiveProcesses()
+      ElMessage.success('流程已终止')
+    } catch (error) {
+      ElMessage.error('流程终止失败')
+      throw error
+    }
+  }
+
+  // 📚 流程历史查询
+  const getProcessHistory = async (
+    instanceId: string
+  ): Promise<ProcessHistoryEvent[]> => {
+    try {
+      const response = await processApi.getProcessHistory(instanceId)
+      return response.data
+    } catch (error) {
+      ElMessage.error('流程历史查询失败')
+      return []
+    }
+  }
+
+  // 🔄 刷新活跃流程
+  const refreshActiveProcesses = async () => {
+    try {
+      const response = await processApi.getActiveProcesses()
+      activeProcesses.value = response.data.list
+      
+      // 更新流程统计信息
+      updateProcessStatistics()
+    } catch (error) {
+      ElMessage.error('流程数据加载失败')
+    }
+  }
+
+  // 📊 更新流程统计
+  const updateProcessStatistics = () => {
+    const stats = activeProcesses.value.reduce((acc, process) => {
+      acc.totalInstances++
+      
+      switch (process.status) {
+        case 'running':
+          acc.runningInstances++
+          break
+        case 'completed':
+          acc.completedInstances++
+          break
+        case 'suspended':
+          acc.suspendedInstances++
+          break
+      }
+      
+      if (process.duration) {
+        acc.totalDuration += process.duration
+      }
+      
+      return acc
+    }, {
+      totalInstances: 0,
+      runningInstances: 0,
+      completedInstances: 0,
+      suspendedInstances: 0,
+      totalDuration: 0
+    })
+    
+    stats.averageCompletionTime = stats.completedInstances > 0 
+      ? stats.totalDuration / stats.completedInstances 
+      : 0
+    
+    processStatistics.value = stats
+  }
+
+  return {
+    // 流程状态
+    activeProcesses: readonly(activeProcesses),
+    processStatistics: readonly(processStatistics),
+    currentProcessDefinition: readonly(currentProcessDefinition),
+    selectedProcessInstance: readonly(selectedProcessInstance),
+    
+    // 流程操作方法
+    methods: {
+      startProcess,
+      suspendProcess,
+      resumeProcess,
+      terminateProcess,
+      getProcessHistory,
+      refreshActiveProcesses,
+      updateProcessStatistics
+    }
+  }
+}
+```
+
+## 🎯 企业级开发最佳实践
+
+### 1. 🚀 性能优化策略
+- **数据虚拟化** - 大量设备数据使用虚拟滚动和分页加载  
+- **实时数据优化** - WebSocket 连接池 + 数据去重 + 增量更新
+- **地图性能** - 设备聚合显示 + LOD 层级细节 + 瓦片缓存
+- **组件懒加载** - 路由级别和组件级别的按需加载
+
+### 2. 🔒 业务安全保障
+- **权限细粒度控制** - 页面、按钮、API、数据四个层级
+- **操作审计追踪** - 关键业务操作全程记录和追溯
+- **数据安全防护** - 敏感数据加密 + 访问日志 + 权限校验
+- **业务规则校验** - 前后端双重校验 + 业务逻辑一致性
+
+### 3. 🏗️ 架构可扩展性
+- **微前端架构** - 业务域独立开发 + 运行时集成
+- **插件化设计** - 设备类型插件 + 流程节点插件 + 权限策略插件
+- **配置驱动** - 表单配置化 + 流程配置化 + 权限配置化
+- **多租户支持** - 数据隔离 + 权限隔离 + 配置隔离
+
+### 4. 🔧 开发效率提升
+- **代码生成工具** - API 类型生成 + CRUD 页面生成 + 表单生成
+- **业务组件库** - 设备组件 + 流程组件 + 权限组件
+- **开发调试工具** - Mock 数据 + API 调试 + 状态查看器
+- **自动化测试** - 单元测试 + 集成测试 + E2E 测试

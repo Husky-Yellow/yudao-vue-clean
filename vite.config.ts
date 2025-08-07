@@ -39,7 +39,7 @@ export default ({command, mode}: ConfigEnv): UserConfig => {
             // },
         },
         // 项目使用的vite插件。 单独提取到build/vite/plugin中管理
-        plugins: createVitePlugins(),
+        plugins: createVitePlugins(command, env),
         css: {
             preprocessorOptions: {
                 scss: {
@@ -76,7 +76,6 @@ export default ({command, mode}: ConfigEnv): UserConfig => {
             rollupOptions: {
                 output: {
                     manualChunks: {
-                      echarts: ['echarts'], // 将 echarts 单独打包，参考 https://gitee.com/yudaocode/yudao-ui-admin-vue3/issues/IAB1SX 讨论
                       'form-create': ['@form-create/element-ui'], // 参考 https://github.com/yudaocode/yudao-ui-admin-vue3/issues/148 讨论
                       'form-designer': ['@form-create/designer'],
                     }

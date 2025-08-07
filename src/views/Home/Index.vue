@@ -114,14 +114,20 @@
             <el-col :xl="10" :lg="10" :md="24" :sm="24" :xs="24">
               <el-card shadow="hover" class="mb-8px">
                 <el-skeleton :loading="loading" animated>
-                  <Echart :options="pieOptionsData" :height="280" />
+                  <div class="text-center text-gray-500 py-20">
+                    <Icon icon="ep:pie-chart" class="text-4xl mb-4" />
+                    <div>图表功能已移除</div>
+                  </div>
                 </el-skeleton>
               </el-card>
             </el-col>
             <el-col :xl="14" :lg="14" :md="24" :sm="24" :xs="24">
               <el-card shadow="hover" class="mb-8px">
                 <el-skeleton :loading="loading" animated>
-                  <Echart :options="barOptionsData" :height="280" />
+                  <div class="text-center text-gray-500 py-20">
+                    <Icon icon="ep:histogram" class="text-4xl mb-4" />
+                    <div>图表功能已移除</div>
+                  </div>
                 </el-skeleton>
               </el-card>
             </el-col>
@@ -182,13 +188,11 @@
 </template>
 <script lang="ts" setup>
 import { set } from 'lodash-es'
-import { EChartsOption } from 'echarts'
 import { formatTime } from '@/utils'
 
 import { useUserStore } from '@/store/modules/user'
 // import { useWatermark } from '@/hooks/web/useWatermark'
 import type { WorkplaceTotal, Project, Notice, Shortcut } from './types'
-import { pieOptions, barOptions } from './echarts-data'
 import { useRouter } from 'vue-router'
 
 defineOptions({ name: 'Index' })
@@ -200,7 +204,6 @@ const userStore = useUserStore()
 const loading = ref(true)
 const avatar = userStore.getUser.avatar
 const username = userStore.getUser.nickname
-const pieOptionsData = reactive<EChartsOption>(pieOptions) as EChartsOption
 // 获取统计数
 let totalSate = reactive<WorkplaceTotal>({
   project: 0,
@@ -352,50 +355,11 @@ const getShortcut = async () => {
 
 // 用户来源
 const getUserAccessSource = async () => {
-  const data = [
-    { value: 335, name: 'analysis.directAccess' },
-    { value: 310, name: 'analysis.mailMarketing' },
-    { value: 234, name: 'analysis.allianceAdvertising' },
-    { value: 135, name: 'analysis.videoAdvertising' },
-    { value: 1548, name: 'analysis.searchEngines' }
-  ]
-  set(
-    pieOptionsData,
-    'legend.data',
-    data.map((v) => t(v.name))
-  )
-  pieOptionsData!.series![0].data = data.map((v) => {
-    return {
-      name: t(v.name),
-      value: v.value
-    }
-  })
+  // 图表功能已移除，这里可以添加其他逻辑
 }
-const barOptionsData = reactive<EChartsOption>(barOptions) as EChartsOption
-
 // 周活跃量
 const getWeeklyUserActivity = async () => {
-  const data = [
-    { value: 13253, name: 'analysis.monday' },
-    { value: 34235, name: 'analysis.tuesday' },
-    { value: 26321, name: 'analysis.wednesday' },
-    { value: 12340, name: 'analysis.thursday' },
-    { value: 24643, name: 'analysis.friday' },
-    { value: 1322, name: 'analysis.saturday' },
-    { value: 1324, name: 'analysis.sunday' }
-  ]
-  set(
-    barOptionsData,
-    'xAxis.data',
-    data.map((v) => t(v.name))
-  )
-  set(barOptionsData, 'series', [
-    {
-      name: t('analysis.activeQuantity'),
-      data: data.map((v) => v.value),
-      type: 'bar'
-    }
-  ])
+  // 图表功能已移除，这里可以添加其他逻辑
 }
 
 const getAllApi = async () => {

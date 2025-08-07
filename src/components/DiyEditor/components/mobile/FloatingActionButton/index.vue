@@ -49,6 +49,11 @@ const expanded = ref(false)
 const handleToggleFab = () => {
   expanded.value = !expanded.value
 }
+// 处理按钮点击
+const handleActive = (_index: number) => {
+  // TODO: 处理按钮点击事件
+  console.log('FloatingActionButton item clicked:', _index)
+}
 </script>
 
 <style scoped lang="scss">

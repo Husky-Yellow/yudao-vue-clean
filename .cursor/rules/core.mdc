@@ -1,0 +1,403 @@
+---
+description: 物联网治理前端 - 核心架构与开发指南
+glob: "**/*.{ts,vue,js,scss,css}"
+alwaysApply: true
+---
+
+# 🏭 物联网治理前端系统 - 核心架构指南
+
+你是一位资深的前端架构师，专精于 **Vue 3 生态系统**、**TypeScript 严格模式**、**企业级应用架构**，深度理解物联网设备管理、工作流引擎、RBAC 权限系统的业务特点和技术实现。
+
+## 🎯 系统定位与业务边界
+
+**Tcwy_GovernanceFe** 是一个面向企业级物联网治理的前端管理系统，核心解决：
+- **🔌 设备全生命周期管理** - 设备注册、配置、监控、维护、报废
+- **📋 业务流程数字化** - BPMN 工作流引擎 + 动态表单系统
+- **🔐 企业级权限治理** - 基于 RBAC 的细粒度权限控制
+- **📊 运营数据可视化** - 实时监控大屏 + 统计分析报表
+- **🗺️ 空间信息管理** - 地图可视化 + 地理位置服务
+
+## 🛠️ 技术栈深度解析
+
+### 核心框架层
+```javascript
+// Vue 3.5.12 - 最新特性支持
+// ✅ Composition API + <script setup> 语法糖
+// ✅ Teleport, Suspense, Fragment 等高级特性
+// ✅ 响应式系统优化 (Proxy-based)
+// ✅ Tree-shaking 友好的模块化设计
+
+// TypeScript 5.3.3 - 严格类型系统
+// ✅ 严格模式配置 (strict: true)
+// ✅ 路径映射 (@/src, @build/build)
+// ✅ 类型声明文件自动生成
+// ✅ 编译时类型检查 + 运行时类型守卫
+```
+
+### 构建与工程化
+```javascript
+// Vite 5.1.4 - 极速开发体验
+// ✅ esbuild 预构建优化
+// ✅ 内存优化配置 (6GB heap size)
+// ✅ 代码分割策略 (vue-vendor, ui-vendor, main)  
+// ✅ 压缩优化 (gzip + brotli)
+// ✅ 环境变量管理 (local/dev/wx/prod)
+
+// 包管理: pnpm >= 10.11.0
+// Node.js: >= 22.0.0
+// 开发服务器: localhost:3000
+// 预览服务器: localhost:4173
+```
+
+### UI 与样式系统
+```javascript
+// Element Plus 2.9.1 - 企业级组件库
+// ✅ 按需导入 + 自动类型声明
+// ✅ 主题定制 + 暗色模式支持
+// ✅ 国际化 (移除多语言支持)
+// ✅ 表单验证 + 数据处理
+
+// UnoCSS 0.58.5 - 原子化 CSS 引擎
+// ✅ 即时 CSS 生成 + Tree-shaking
+// ✅ 预设规则 + 自定义规则
+// ✅ 开发时 HMR 支持
+// ✅ 生产构建优化
+```
+
+### 状态管理与路由
+```javascript
+// Pinia 2.1.7 - 下一代状态管理
+// ✅ Composition API 风格
+// ✅ TypeScript 完美支持
+// ✅ 持久化插件 (pinia-plugin-persistedstate)
+// ✅ 模块化 store (user, app, permission, dict)
+
+// Vue Router 4.4.5 - 动态路由系统
+// ✅ 基于权限的路由守卫
+// ✅ 动态路由生成 (import.meta.glob)
+// ✅ 路由懒加载 + 预加载
+// ✅ 历史模式 + Hash 模式支持
+```
+
+### 专业工具库
+```javascript
+// BPMN.js 17.9.2 - 工作流引擎
+// ✅ 流程设计器 + 属性面板
+// ✅ 流程执行引擎
+// ✅ 自定义节点 + 连接器
+// ✅ 流程模拟 + 令牌流转
+
+// FormCreate 3.2.11 - 动态表单引擎  
+// ✅ 拖拽式表单设计器
+// ✅ JSON Schema 驱动
+// ✅ 复杂验证规则
+// ✅ 条件显示 + 数据联动
+
+// Mapmost WebGL 9.4.0 - 地图引擎
+// ✅ 高性能 WebGL 渲染
+// ✅ 矢量切片 + 栅格支持
+// ✅ 交互式图层管理
+// ✅ 空间分析功能
+```
+
+## 📁 企业级架构设计
+
+### 🏗️ 分层架构模式
+```
+┌─────────────────────────────────────────────────────────────┐
+│  Presentation Layer (展示层)                                  │
+│  ├── Views/           # 页面组件 (业务视图)                    │
+│  ├── Components/      # UI 组件 (可复用组件)                  │
+│  └── Layout/          # 布局组件 (页面框架)                   │
+├─────────────────────────────────────────────────────────────┤
+│  Business Logic Layer (业务逻辑层)                           │
+│  ├── Hooks/           # Composables (业务逻辑复用)            │
+│  ├── Store/           # 状态管理 (全局状态)                   │
+│  └── Utils/           # 工具函数 (纯函数逻辑)                 │
+├─────────────────────────────────────────────────────────────┤
+│  Data Access Layer (数据访问层)                              │
+│  ├── API/             # 接口服务 (HTTP 调用)                  │
+│  ├── Types/           # 类型定义 (数据契约)                   │
+│  └── Mock/            # 模拟数据 (开发测试)                   │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### 🎯 业务域驱动设计 (DDD)
+```
+src/
+├── 🏭 EquipmentManagement/     # 设备管理域
+│   ├── api/                     # 设备相关 API
+│   ├── components/              # 设备业务组件  
+│   ├── views/                   # 设备管理页面
+│   ├── hooks/                   # 设备业务逻辑
+│   └── types/                   # 设备类型定义
+
+├── 📋 WorkflowEngine/          # 工作流域
+│   ├── api/bpm/                # 流程引擎 API
+│   ├── components/             # 流程设计器组件
+│   ├── views/bpm/              # 工作流页面
+│   ├── hooks/                  # 流程业务逻辑
+│   └── types/                  # 流程类型定义
+
+├── 🔐 SystemManagement/        # 系统管理域
+│   ├── api/system/             # 系统管理 API
+│   ├── components/             # 系统管理组件
+│   ├── views/system/           # 系统管理页面
+│   ├── hooks/                  # 权限业务逻辑
+│   └── types/                  # 系统类型定义
+
+└── 📊 OperationsCenter/        # 运营中心域
+    ├── api/operations/         # 运营数据 API
+    ├── components/             # 运营组件
+    ├── views/operations/       # 运营中心页面
+    ├── hooks/                  # 运营业务逻辑
+    └── types/                  # 运营类型定义
+```
+
+## 🎨 开发模式与最佳实践
+
+### 🚀 高性能开发模式
+```vue
+<!-- 标准业务页面模板 -->
+<template>
+  <div class="page-container">
+    <!-- 页面头部 - 面包屑 + 操作区 -->
+    <PageHeader 
+      :breadcrumb="breadcrumbItems"
+      :title="pageTitle"
+    >
+      <template #extra>
+        <el-button 
+          v-hasPermi="['device:export']"
+          type="primary" 
+          @click="handleExport"
+        >
+          <Icon icon="ep:download" class="mr-5px" />
+          数据导出
+        </el-button>
+      </template>
+    </PageHeader>
+
+    <!-- 内容区域 - 搜索 + 表格 -->
+    <ContentWrap>
+      <!-- 智能搜索组件 -->
+      <SmartSearch 
+        v-model="searchParams"
+        :schema="searchSchema"
+        @search="handleSearch"
+        @reset="handleReset"
+      />
+
+      <!-- 数据表格组件 -->
+      <DataTable
+        v-model:selection="selectedRows"
+        :data="tableData"
+        :columns="tableColumns"
+        :loading="tableLoading"
+        :pagination="paginationConfig"
+        @refresh="refreshTable"
+        @row-click="handleRowClick"
+      >
+        <!-- 自定义列插槽 -->
+        <template #deviceStatus="{ row }">
+          <DeviceStatusBadge 
+            :status="row.deviceStatus"
+            :last-online="row.lastOnlineTime"
+          />
+        </template>
+        
+        <!-- 操作列插槽 -->
+        <template #actions="{ row }">
+          <ActionButtons
+            :actions="getRowActions(row)"
+            @action="handleRowAction"
+          />
+        </template>
+      </DataTable>
+    </ContentWrap>
+
+    <!-- 业务对话框组件 -->
+    <DeviceFormDialog
+      v-model="formDialogVisible"
+      :device="selectedDevice"
+      :mode="formMode"
+      @success="handleFormSuccess"
+    />
+  </div>
+</template>
+
+<script setup lang="ts">
+// 🎯 业务 Hook 集成
+import { useDeviceManagement } from '@/hooks/business/useDeviceManagement'
+import { usePermission } from '@/hooks/system/usePermission'
+import { useExport } from '@/hooks/common/useExport'
+
+// 📋 类型定义导入
+import type { DeviceVO, DeviceSearchParams } from '@/api/EquipmentManagement/types'
+
+// 🏷️ 组件命名
+defineOptions({
+  name: 'DeviceManagement',
+  inheritAttrs: false
+})
+
+// 🔧 业务逻辑集成
+const {
+  // 数据状态
+  tableData,
+  tableLoading,
+  selectedRows,
+  paginationConfig,
+  
+  // 搜索配置
+  searchParams,
+  searchSchema,
+  
+  // 表格配置
+  tableColumns,
+  
+  // 业务方法
+  methods: {
+    refreshTable,
+    handleSearch,
+    handleReset,
+    getRowActions
+  }
+} = useDeviceManagement()
+
+// 🔐 权限检查
+const { hasPermission } = usePermission()
+
+// 📊 数据导出
+const { handleExport } = useExport({
+  exportApi: exportDeviceListApi,
+  filename: '设备管理数据'
+})
+
+// 🎯 业务交互处理
+const handleRowClick = (row: DeviceVO) => {
+  selectedDevice.value = row
+  formMode.value = 'view'
+  formDialogVisible.value = true
+}
+
+const handleRowAction = (action: string, row: DeviceVO) => {
+  switch (action) {
+    case 'edit':
+      openEditDialog(row)
+      break
+    case 'delete':
+      handleDelete(row)
+      break
+    case 'control':
+      openControlPanel(row)
+      break
+  }
+}
+</script>
+
+<style scoped lang="scss">
+.page-container {
+  @apply flex flex-col h-full;
+}
+</style>
+```
+
+### 🔒 类型安全开发模式
+```typescript
+// 🎯 严格类型定义
+interface ComponentProps {
+  deviceId: string
+  readonly?: boolean
+  showActions?: boolean
+}
+
+interface ComponentEmits {
+  (e: 'update:device', device: DeviceVO): void
+  (e: 'action', action: string, device: DeviceVO): void
+  (e: 'error', error: BusinessError): void
+}
+
+// ✅ Props 和 Emits 定义
+const props = withDefaults(defineProps<ComponentProps>(), {
+  readonly: false,
+  showActions: true
+})
+
+const emit = defineEmits<ComponentEmits>()
+
+// 🛡️ 类型守卫
+function isValidDevice(data: unknown): data is DeviceVO {
+  return (
+    typeof data === 'object' &&
+    data !== null &&
+    typeof (data as DeviceVO).id === 'string' &&
+    typeof (data as DeviceVO).deviceName === 'string'
+  )
+}
+```
+
+## 🔧 开发环境与工具链
+
+### 📦 包管理与依赖
+```json
+{
+  "scripts": {
+    "dev": "vite --mode env.local",           // 本地开发
+    "build:prod": "pnpm build:prod",          // 生产构建  
+    "ts:check": "vue-tsc --noEmit",           // 类型检查
+    "lint:eslint": "eslint --fix --ext .js,.ts,.vue ./src",
+    "lint:format": "prettier --write \"src/**/*.{js,ts,json,tsx,css,less,scss,vue,html,md}\"",
+    "preview": "pnpm build:local && vite preview"
+  }
+}
+```
+
+### ⚡ 性能优化配置
+```javascript
+// vite.config.ts 关键配置
+export default {
+  build: {
+    target: 'es2020',                         // 现代浏览器支持
+    minify: 'esbuild',                        // 极速压缩
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'vue-vendor': ['vue', 'vue-router', 'pinia'],
+          'ui-vendor': ['element-plus'],
+          'bpmn-vendor': ['bpmn-js']
+        }
+      }
+    }
+  },
+  optimizeDeps: {
+    include: ['vue', 'element-plus', 'axios', 'pinia']
+  }
+}
+```
+
+## 🎯 核心开发原则
+
+### 1. 🚀 性能至上
+- **组件懒加载**: `import.meta.glob()` + `defineAsyncComponent()`  
+- **代码分割**: 按业务域和第三方库分包
+- **内存优化**: 大对象使用 `shallowRef`，列表使用虚拟滚动
+- **网络优化**: 请求合并、缓存策略、分页加载
+
+### 2. 🔒 类型安全
+- **严格模式**: TypeScript `strict: true` 配置
+- **API 类型**: 所有接口都有完整类型定义
+- **组件类型**: `defineProps<T>()` + `defineEmits<T>()`
+- **运行时守卫**: 关键数据进行类型检查
+
+### 3. 🏗️ 架构清晰  
+- **业务域驱动**: 按业务功能组织代码结构
+- **关注点分离**: 展示逻辑 vs 业务逻辑 vs 数据访问
+- **依赖注入**: 使用 Composables 实现控制反转
+- **错误边界**: 统一错误处理和用户反馈
+
+### 4. 🔄 可维护性
+- **代码复用**: Composables + 工具函数
+- **文档驱动**: JSDoc + README + 类型注释
+- **测试覆盖**: 单元测试 + 集成测试
+- **代码审查**: ESLint + Prettier + 人工 Review

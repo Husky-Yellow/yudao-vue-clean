@@ -37,7 +37,6 @@ import App from './App.vue'
 
 import './permission'
 
-import '@/plugins/tongji' // 百度统计
 import Logger from '@/utils/Logger'
 
 import VueDOMPurifyHTML from 'vue-dompurify-html' // 解决v-html 的安全隐患
@@ -70,5 +69,12 @@ const setupAll = async () => {
 }
 
 setupAll()
+
+// Mock状态提示
+if (import.meta.env.VITE_USE_MOCK === 'true') {
+  Logger.prettyInfo(`🔧 Mock数据已启用`, 'API请求将被Mock数据拦截')
+} else {
+  Logger.prettyInfo(`🌐 使用真实API`, '连接到后端服务')
+}
 
 Logger.prettyPrimary(`欢迎使用`, import.meta.env.VITE_APP_TITLE)
